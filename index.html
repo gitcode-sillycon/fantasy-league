@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>Fantasy Cricket League</title>
+
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      background: #0b1c2c;
+      color: white;
+    }
+
+    h1 {
+      text-align: center;
+      padding: 15px;
+      background: #d32f2f;
+      margin: 0;
+    }
+
+    .tabs {
+      display: flex;
+      justify-content: space-around;
+      background: #1a2c3a;
+    }
+
+    .tabs button {
+      flex: 1;
+      padding: 12px;
+      background: none;
+      border: none;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .tabs button:hover {
+      background: #263c4d;
+    }
+
+    .tab {
+      display: none;
+      padding: 15px;
+    }
+
+    .tab.active {
+      display: block;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      margin: 5px 0;
+      padding: 10px;
+      border-radius: 6px;
+    }
+
+    .player {
+      background: #162a3a;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .selected {
+      border: 2px solid #00e676;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      background: #00e676;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    #leaderboard li {
+      background: #ffcc00;
+      color: black;
+    }
+
+    #teamPreview li {
+      background: #263c4d;
+    }
+
+    #playerCount {
+      color: #00e676;
+    }
+
+    #userInfo {
+      color: #ffd700;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 5px;
+    }
+
+    input {
+      padding: 6px;
+      margin: 5px;
+      border-radius: 5px;
+      border: none;
+    }
+
+    .auth {
+      text-align: center;
+      padding: 10px;
+      background: #1a2c3a;
+    }
+  </style>
+
+</head>
+
+<body>
+
+<h1>🏏 DOZER FANTASY LEAGUE</h1>
+
+<div class="auth">
+  <input id="username" placeholder="Username">
+  <input id="password" type="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+
+  <br>
+
+  <input id="newUsername" placeholder="New Username">
+  <input id="newPassword" type="password" placeholder="New Password">
+  <button onclick="signup()">Signup</button>
+
+  <h3 id="userInfo"></h3>
+</div>
+
+<div class="tabs">
+  <button onclick="showTab('matches')">Matches</button>
+  <button onclick="showTab('team')">My Team</button>
+  <button onclick="showTab('leaderboard')">Leaderboard</button>
+</div>
+
+<div id="matchesTab" class="tab active">
+  <h2>Matches</h2>
+  <ul id="matches"></ul>
+</div>
+
+<div id="teamTab" class="tab">
+  <h2>Select Team</h2>
+  <h3 id="playerCount">Selected: 0 / 11</h3>
+  <div id="players"></div>
+  <button class="submit-btn" onclick="submitTeam()">Submit Team</button>
+
+  <h3>Your Team</h3>
+  <ul id="teamPreview"></ul>
+</div>
+
+<div id="leaderboardTab" class="tab">
+  <h2>Leaderboard</h2>
+  <button onclick="loadLeaderboard()">Refresh</button>
+  <ul id="leaderboard"></ul>
+</div>
+
+<script>
+let currentUser = null;
+let selectedPlayers = [];
+let currentMatch = null;
+
+// TAB SWITCH
+function showTab(tab) {
+  document.getElementById("matchesTab").classList.remove("active");
+  document.getElementById("teamTab").classList.remove("active");
+  document.getElementById("leaderboardTab").classList.remove("active");
+
+  document.getElementById(tab + "Tab").classList.add("active");
+}
+
+// LOGIN
+async function login() {
+  const res = await fetch("http://localhost:3000/login", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      username: username.value,
+      password: password.value
+    })
+  });
+
+  const text = await res.text();
+
+  try {
+    currentUser = JSON.parse(text);
+    userInfo.innerText = "Logged in as: " + currentUser.username;
+    loadMatches();
+  } catch {
+    alert("Login failed");
+  }
+}
+
+// SIGNUP
+async function signup() {
+  const res = await fetch("http://localhost:3000/signup", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      username: newUsername.value,
+      password: newPassword.value
+    })
+  });
+
+  alert(await res.text());
+}
+
+// LOAD MATCHES
+async function loadMatches() {
+  const res = await fetch("http://localhost:3000/matches");
+  const matches = await res.json();
+
+  const list = matches.map(m => 
+    `<li onclick="loadPlayers(${m.id})">${m.team1} vs ${m.team2}</li>`
+  ).join("");
+
+  document.getElementById("matches").innerHTML = list;
+}
+
+// LOAD PLAYERS
+async function loadPlayers(matchId) {
+  if (!currentUser) return alert("Login first");
+
+  currentMatch = matchId;
+  selectedPlayers = [];
+
+  showTab('team');
+
+  const res = await fetch(`http://localhost:3000/players/${matchId}`);
+  const players = await res.json();
+
+  const html = players.map(p => `
+    <div class="player">
+      <div>
+        <input type="checkbox" onchange="togglePlayer(this, ${p.id}, '${p.name}', '${p.team}', '${p.role}', ${p.is_overseas})">
+        <b>${p.name}</b><br>
+        <small>${p.team} • ${p.role}</small>
+      </div>
+      <select onchange="setRole(${p.id}, this.value)">
+        <option value="normal">Normal</option>
+        <option value="captain">Captain</option>
+        <option value="vice">Vice</option>
+      </select>
+    </div>
+  `).join("");
+
+  document.getElementById("players").innerHTML = html;
+}
+
+// PLAYER SELECT
+function togglePlayer(cb, id, name, team, role, is_overseas) {
+  if (cb.checked) {
+    selectedPlayers.push({ id, name, team, role, is_overseas, selectedRole: "normal" });
+    cb.parentElement.parentElement.classList.add("selected");
+  } else {
+    selectedPlayers = selectedPlayers.filter(p => p.id !== id);
+    cb.parentElement.parentElement.classList.remove("selected");
+  }
+
+  updatePlayerCount();
+  updateTeamPreview();
+}
+
+function setRole(id, role) {
+  const p = selectedPlayers.find(x => x.id === id);
+  if (p) p.selectedRole = role;
+  updateTeamPreview();
+}
+
+// UI UPDATES
+function updatePlayerCount() {
+  playerCount.innerText = `Selected: ${selectedPlayers.length} / 11`;
+}
+
+function updateTeamPreview() {
+  teamPreview.innerHTML = selectedPlayers.map(p =>
+    `<li><b>${p.name}</b> ${p.selectedRole === "captain" ? "(C)" : p.selectedRole === "vice" ? "(VC)" : ""}</li>`
+  ).join("");
+}
+
+// SUBMIT
+async function submitTeam() {
+  const res = await fetch("http://localhost:3000/save-team", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      user_id: currentUser.id,
+      match_id: currentMatch,
+      players: selectedPlayers
+    })
+  });
+
+  alert(await res.text());
+
+  showTab('leaderboard');
+  loadLeaderboard();
+}
+
+// LEADERBOARD
+async function loadLeaderboard() {
+  const res = await fetch(`http://localhost:3000/leaderboard/${currentMatch}`);
+  const data = await res.json();
+
+  leaderboard.innerHTML = data.map((e,i) =>
+    `<li>${i+1}. ${e.user} - ${e.pts}</li>`
+  ).join("");
+}
+</script>
+
+</body>
+</html>
