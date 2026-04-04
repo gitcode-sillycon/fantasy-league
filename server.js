@@ -67,78 +67,75 @@ db.serialize(() => {
 
 // Initialize sample data
 app.get("/init", (req, res) => {
- // Clear old data
-  db.run("DELETE FROM players");
-  db.run("DELETE FROM matches");
+  db.serialize(() => {
 
-  const players = [
-  // MI
-  ["Rohit Sharma", "MI", "batsman", 0],
-  ["Jasprit Bumrah", "MI", "bowler", 0],
-  ["Hardik Pandya", "MI", "allrounder", 0],
-  ["Ishan Kishan", "MI", "wicketkeeper", 0],
-  ["Tim David", "MI", "batsman", 1],
-  ["Suryakumar Yadav", "MI", "batsman", 0],
-  ["Gerald Coetzee", "MI", "bowler", 1],
+    db.run("DELETE FROM players");
+    db.run("DELETE FROM matches");
 
-  // CSK
-  ["MS Dhoni", "CSK", "wicketkeeper", 0],
-  ["Ruturaj Gaikwad", "CSK", "batsman", 0],
-  ["Ravindra Jadeja", "CSK", "allrounder", 0],
-  ["Deepak Chahar", "CSK", "bowler", 0],
-  ["Pathirana", "CSK", "bowler", 1],
-  ["Shivam Dube", "CSK", "allrounder", 0],
-  ["Devon Conway", "CSK", "batsman", 1],
+    const players = [
+      ["Rohit Sharma", "MI", "batsman", 0],
+      ["Jasprit Bumrah", "MI", "bowler", 0],
+      ["Hardik Pandya", "MI", "allrounder", 0],
+      ["Ishan Kishan", "MI", "wicketkeeper", 0],
+      ["Tim David", "MI", "batsman", 1],
+      ["Suryakumar Yadav", "MI", "batsman", 0],
+      ["Gerald Coetzee", "MI", "bowler", 1],
 
-  // RCB
-  ["Virat Kohli", "RCB", "batsman", 0],
-  ["Faf du Plessis", "RCB", "batsman", 1],
-  ["Glenn Maxwell", "RCB", "allrounder", 1],
-  ["Mohammed Siraj", "RCB", "bowler", 0],
-  ["Dinesh Karthik", "RCB", "wicketkeeper", 0],
+      ["MS Dhoni", "CSK", "wicketkeeper", 0],
+      ["Ruturaj Gaikwad", "CSK", "batsman", 0],
+      ["Ravindra Jadeja", "CSK", "allrounder", 0],
+      ["Deepak Chahar", "CSK", "bowler", 0],
+      ["Pathirana", "CSK", "bowler", 1],
+      ["Shivam Dube", "CSK", "allrounder", 0],
+      ["Devon Conway", "CSK", "batsman", 1],
 
-  // KKR
-  ["Shreyas Iyer", "KKR", "batsman", 0],
-  ["Andre Russell", "KKR", "allrounder", 1],
-  ["Sunil Narine", "KKR", "allrounder", 1],
-  ["Varun Chakravarthy", "KKR", "bowler", 0],
-  ["Phil Salt", "KKR", "wicketkeeper", 1],
+      ["Virat Kohli", "RCB", "batsman", 0],
+      ["Faf du Plessis", "RCB", "batsman", 1],
+      ["Glenn Maxwell", "RCB", "allrounder", 1],
+      ["Mohammed Siraj", "RCB", "bowler", 0],
+      ["Dinesh Karthik", "RCB", "wicketkeeper", 0],
 
-  // SRH
-  ["Pat Cummins", "SRH", "bowler", 1],
-  ["Abhishek Sharma", "SRH", "allrounder", 0],
-  ["Rahul Tripathi", "SRH", "batsman", 0],
-  ["Heinrich Klaasen", "SRH", "wicketkeeper", 1],
+      ["Shreyas Iyer", "KKR", "batsman", 0],
+      ["Andre Russell", "KKR", "allrounder", 1],
+      ["Sunil Narine", "KKR", "allrounder", 1],
+      ["Varun Chakravarthy", "KKR", "bowler", 0],
+      ["Phil Salt", "KKR", "wicketkeeper", 1],
 
-  // DC
-  ["Rishabh Pant", "DC", "wicketkeeper", 0],
-  ["David Warner", "DC", "batsman", 1],
-  ["Axar Patel", "DC", "allrounder", 0],
-  ["Kuldeep Yadav", "DC", "bowler", 0]
-];
+      ["Pat Cummins", "SRH", "bowler", 1],
+      ["Abhishek Sharma", "SRH", "allrounder", 0],
+      ["Rahul Tripathi", "SRH", "batsman", 0],
+      ["Heinrich Klaasen", "SRH", "wicketkeeper", 1],
 
-  players.forEach(p => {
-    db.run(
-      "INSERT INTO players (name, team, role, is_overseas) VALUES (?, ?, ?, ?)",
-      p
-    );
+      ["Rishabh Pant", "DC", "wicketkeeper", 0],
+      ["David Warner", "DC", "batsman", 1],
+      ["Axar Patel", "DC", "allrounder", 0],
+      ["Kuldeep Yadav", "DC", "bowler", 0]
+    ];
+
+    const matches = [
+      ["MI", "CSK", "2026-04-01"],
+      ["RCB", "KKR", "2026-04-02"],
+      ["SRH", "DC", "2026-04-03"]
+    ];
+
+    players.forEach(p => {
+      db.run(
+        "INSERT INTO players (name, team, role, is_overseas) VALUES (?, ?, ?, ?)",
+        p
+      );
+    });
+
+    matches.forEach(m => {
+      db.run(
+        "INSERT INTO matches (team1, team2, date) VALUES (?, ?, ?)",
+        m
+      );
+    });
+
+    res.send("Initialized!");
   });
-
-  const matches = [
-  ["MI", "CSK", "2026-04-01"],
-  ["RCB", "KKR", "2026-04-02"],
-  ["SRH", "DC", "2026-04-03"]
-];
-
-matches.forEach(m => {
-  db.run(
-    "INSERT INTO matches (team1, team2, date) VALUES (?, ?, ?)",
-    m
-  );
 });
 
-  res.send("Initialized!");
-});
 
 // Get matches
 app.get("/matches", (req, res) => {
