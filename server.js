@@ -6,7 +6,13 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-const db = new sqlite3.Database("./fantasy.db");
+const db = new sqlite3.Database("./fantasy.db", (err) => {
+  if (err) {
+    console.error("DB Error:", err);
+  } else {
+    console.log("Database created/connected");
+  }
+});
 
 db.serialize(() => {
   db.run(`
@@ -315,5 +321,8 @@ app.get("/check-team/:userId/:matchId", (req, res) => {
     }
   );
 });
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log("Server running"));
 
 app.listen(3000, () => console.log("Server running on port 3000"));
