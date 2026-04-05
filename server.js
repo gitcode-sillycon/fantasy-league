@@ -113,26 +113,14 @@ app.get("/init", (req, res) => {
       ["Kuldeep Yadav", "DC", "bowler", 0]
     ];
 
-    const matches = [
-      ["MI", "CSK", "2026-04-01"],
-      ["RCB", "KKR", "2026-04-02"],
-      ["SRH", "DC", "2026-04-03"]
-    ];
-
-    players.forEach(p => {
+        players.forEach(p => {
       db.run(
         "INSERT INTO players (name, team, role, is_overseas) VALUES (?, ?, ?, ?)",
         p
       );
     });
 
-    matches.forEach(m => {
-      db.run(
-        "INSERT INTO matches (team1, team2, date) VALUES (?, ?, ?)",
-        m
-      );
-    });
-
+    
     res.send("Initialized!");
   });
 });
@@ -143,7 +131,7 @@ app.get("/", (req, res) => {
 
 // Get matches
 app.get("/matches", (req, res) => {
-  db.all("SELECT * FROM matches", [], (err, rows) => {
+  db.all("SELECT * FROM matches ORDER BY date", [], (err, rows) => {
     res.json(rows);
   });
 });
@@ -321,6 +309,46 @@ app.get("/check-team/:userId/:matchId", (req, res) => {
       res.json({ exists: !!row });
     }
   );
+});
+
+app.post("/add-match", (req, res) => {
+  const { team1, team2, date } = req.body;
+
+  db.run(
+    "INSERT INTO matches (team1, team2, date) VALUES (?, ?, ?)",
+    [team1, team2, date],
+    function(err) {
+      if (err) return res.send("Error");
+
+      res.json({
+        id: this.lastID,
+        team1,
+        team2,
+        date
+      });
+    }
+  );
+});
+
+app.get("/init-matches", (req, res) => {
+  db.serialize(() => {
+    db.run("DELETE FROM matches");
+
+    const matches = [
+      ["MI", "CSK", "2026-04-01"],
+      ["RCB", "KKR", "2026-04-02"],
+      ["SRH", "DC", "2026-04-03"]
+    ];
+
+    matches.forEach(m => {
+      db.run(
+        "INSERT INTO matches (team1, team2, date) VALUES (?, ?, ?)",
+        m
+      );
+    });
+
+    res.send("Matches initialized");
+  });
 });
 
 const PORT = process.env.PORT || 3000;

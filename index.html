@@ -191,15 +191,24 @@ async function login() {
     })
   });
 
-  const text = await res.text();
+  const data = await res.text();
+  showTab('matches'); // 👈 ADD THIS
+  loadMatches();
 
-  try {
-    currentUser = JSON.parse(text);
-    userInfo.innerText = "Logged in as: " + currentUser.username;
-    loadMatches();
-  } catch {
+  console.log("Login response:", data); // 👈 ADD
+
+  if (data === "Invalid credentials") {
     alert("Login failed");
+    return;
   }
+
+  currentUser = JSON.parse(data);
+
+  userInfo.innerText = "Logged in as: " + currentUser.username;
+
+  console.log("Calling loadMatches..."); // 👈 ADD
+
+  loadMatches(); // 🔥 IMPORTANT
 }
 
 // SIGNUP
@@ -218,14 +227,31 @@ async function signup() {
 
 // LOAD MATCHES
 async function loadMatches() {
+  console.log("Fetching matches...");
+
   const res = await fetch("https://fantasy-league-v6xz.onrender.com/matches");
   const matches = await res.json();
 
+  console.log("Matches received:", matches);
+
   const list = matches.map(m => 
-    `<li onclick="loadPlayers(${m.id})">${m.team1} vs ${m.team2}</li>`
+    `<li style="background:yellow;color:black;">
+      ${m.team1} vs ${m.team2}
+    </li>`
   ).join("");
 
-  document.getElementById("matches").innerHTML = list;
+  const el = document.getElementById("matches");
+
+  console.log("Element found:", el);
+
+  if (!el) {
+    alert("Matches element not found ❌");
+    return;
+  }
+
+  el.innerHTML = list;
+
+  showTab('matches'); // 🔥 FORCE SHOW
 }
 
 // LOAD PLAYERS
