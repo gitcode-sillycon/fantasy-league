@@ -182,7 +182,7 @@ function showTab(tab) {
 
 // LOGIN
 async function login() {
-  const res = await fetch("http://localhost:3000/login", {
+  const res = await fetch("https://fantasy-league-v6xz.onrender.com/login", {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({
@@ -204,7 +204,7 @@ async function login() {
 
 // SIGNUP
 async function signup() {
-  const res = await fetch("http://localhost:3000/signup", {
+  const res = await fetch("https://fantasy-league-v6xz.onrender.com/signup", {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({
@@ -218,7 +218,7 @@ async function signup() {
 
 // LOAD MATCHES
 async function loadMatches() {
-  const res = await fetch("http://localhost:3000/matches");
+  const res = await fetch("https://fantasy-league-v6xz.onrender.com/matches");
   const matches = await res.json();
 
   const list = matches.map(m => 
@@ -237,7 +237,7 @@ async function loadPlayers(matchId) {
 
   showTab('team');
 
-  const res = await fetch(`http://localhost:3000/players/${matchId}`);
+  const res = await fetch(`https://fantasy-league-v6xz.onrender.com/players/${matchId}`);
   const players = await res.json();
 
   const html = players.map(p => `
@@ -291,7 +291,7 @@ function updateTeamPreview() {
 
 // SUBMIT
 async function submitTeam() {
-  const res = await fetch("http://localhost:3000/save-team", {
+  const res = await fetch("https://fantasy-league-v6xz.onrender.com/save-team", {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({
@@ -309,7 +309,7 @@ async function submitTeam() {
 
 // LEADERBOARD
 async function loadLeaderboard() {
-  const res = await fetch(`http://localhost:3000/leaderboard/${currentMatch}`);
+  const res = await fetch(`https://fantasy-league-v6xz.onrender.com/leaderboard/${currentMatch}`);
   const data = await res.json();
 
   leaderboard.innerHTML = data.map((e,i) =>
